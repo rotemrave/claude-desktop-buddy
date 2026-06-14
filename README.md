@@ -22,9 +22,22 @@ waiting, and lets you approve or deny right from the device.
 
 ## Hardware
 
+> **Note:** This fork targets the **M5StickC Plus2** and has been migrated
+> from the original `M5StickCPlus` library to **M5Unified**. It will not work
+> on the original M5StickC Plus without reverting those changes.
+>
+> **Known Plus2 limitations:**
+> - **USB detection** — the Plus2 uses a TP4057 charger IC whose status pins
+>   are not connected to any ESP32 GPIO. `isCharging()` and `getVBUSVoltage()`
+>   are therefore unreliable; USB presence is inferred from battery voltage
+>   (≥4.15 V ≈ charger holding the cell). There is a ~1-minute false-positive
+>   window after unplugging before the clock/screen-off behaviour resets.
+> - **Battery current** — no fuel-gauge IC; the mA reading is omitted.
+> - **Temperature** — no AXP die-temp; the DEVICE info page shows IMU temperature instead.
+
 The firmware targets ESP32 with the Arduino framework. As written, it
-depends on the M5StickCPlus library for its display, IMU, and button
-drivers—so you'll need that board, or a fork that swaps those drivers for
+depends on the M5Unified library for its display, IMU, and button
+drivers—so you'll need an M5StickC Plus2, or a fork that swaps those drivers for
 your own pin layout.
 
 ## Flashing

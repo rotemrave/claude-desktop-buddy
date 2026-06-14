@@ -72,7 +72,7 @@ const char* petName();
 void ownerSet(const char* name);
 const char* ownerName();
 #include "stats.h"
-#include <M5StickCPlus.h>
+#include <M5Unified.h>
 
 inline bool xferCommand(JsonDocument& doc) {
   const char* cmd = doc["cmd"];
@@ -112,11 +112,12 @@ inline bool xferCommand(JsonDocument& doc) {
   if (strcmp(cmd, "status") == 0) {
     // Dump everything the info screens show. Manual printf rather than
     // ArduinoJson serialize — less heap churn, and the shape is fixed.
-    int vBat = (int)(M5.Axp.GetBatVoltage() * 1000);
-    int iBat = (int)M5.Axp.GetBatCurrent();
-    int vBus = (int)(M5.Axp.GetVBusVoltage() * 1000);
-    int pct = (vBat - 3200) / 10;
+    int vBat = M5.Power.getBatteryVoltage();   // mV
+    int vBus = M5.Power.getVBUSVoltage();       // mV, -1 if N/A
+    int iBat = 0;                               // Plus2 has no fuel-gauge current
+    int pct = M5.Power.getBatteryLevel();
     if (pct < 0) pct = 0; if (pct > 100) pct = 100;
+    bool usb = (M5.Power.isCharging() == m5::Power_Class::is_charging) || vBus > 4000;
     char b[320];
     int len = snprintf(b, sizeof(b),
       "{\"ack\":\"status\",\"ok\":true,\"n\":0,\"data\":{"
@@ -126,7 +127,7 @@ inline bool xferCommand(JsonDocument& doc) {
       "\"stats\":{\"appr\":%u,\"deny\":%u,\"vel\":%u,\"nap\":%lu,\"lvl\":%u}"
       "}}\n",
       petName(), ownerName(), bleSecure() ? "true" : "false",
-      pct, vBat, iBat, (vBus > 4000) ? "true" : "false",
+      pct, vBat, iBat, usb ? "true" : "false",
       millis() / 1000, ESP.getFreeHeap(),
       (unsigned long)(LittleFS.totalBytes() - LittleFS.usedBytes()),
       (unsigned long)LittleFS.totalBytes(),
